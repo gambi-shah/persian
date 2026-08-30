@@ -1,0 +1,688 @@
+% persian-numerals.def
+%
+% Persian: Persian language support for LaTeX.
+%
+% Copyright (C) 2026 Amer Amikhteh
+%
+% This file is part of the Persian package.
+%
+% This work is free software: you may redistribute it and/or modify
+% it under the terms of the LaTeX Project Public License as published
+% by the LaTeX Project, either version 1.3c of the License, or
+% (at your option) any later version.
+%
+% This work is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+%
+% The full license text is available at:
+% https://www.latex-project.org/lppl/
+%
+% This work is "maintained" by Amer Amikhteh.
+%
+% The current maintainer of this work is Amer Amikhteh.
+
+\ProvidesFile{persian-numerals.def}
+[2026/08/27 v0.1 Persian numeral definitions]
+
+
+\makeatletter
+
+% ------------------------------------------------
+% Raw numeric Arabic counters
+% ------------------------------------------------
+
+\let\persian@arabic\arabic
+\def\arabic#1{\number\value{#1}}
+
+% -------------------------------------------------
+% Abjad simple, 1..28
+% -------------------------------------------------
+
+
+\def\@Abjad#1{%
+  \ifcase#1%
+  \or آ\or ب\or ج\or د%
+  \or ه\or و\or ز\or ح\or ط%
+  \or ی\or ک\or ل\or م\or ن%
+  \or س\or ع\or ف\or ص%
+  \or ق\or ر\or ش\or ت\or ث%
+  \or خ\or ذ\or ض\or ظ\or غ%
+  \else
+    \@ctrerr
+  \fi
+}
+
+\def\Abjad#1{%
+  \expandafter\@Abjad\csname c@#1\endcsname
+}
+
+\let\Abjadnumeral\@Abjad
+
+% -------------------------------------------------
+% Harfi, Persian alphabetic, 1..32
+% -------------------------------------------------
+
+\def\@harfi#1{%
+  \ifcase#1%
+  \or آ\or ب\or پ\or ت\or ث%
+  \or ج\or چ\or ح\or خ\or د%
+  \or ذ\or ر\or ز\or ژ\or س%
+  \or ش\or ص\or ض\or ط\or ظ%
+  \or ع\or غ\or ف\or ق\or ک%
+  \or گ\or ل\or م\or ن\or و%
+  \or ه\or ی%
+  \else
+    \@ctrerr
+  \fi
+}
+
+\def\harfi#1{%
+  \expandafter\@harfi\csname c@#1\endcsname
+}
+
+\let\harfinumeral\@harfi
+
+% -------------------------------------------------
+% Adadi, full Persian words
+% -------------------------------------------------
+
+\newcommand{\adadi}[1]{%
+  \expandafter\@adadi\csname c@#1\endcsname
+}
+
+\newcommand{\@adadi}[1]{%
+  \persian@numberstring{#1}\persian@yekanii{صفر}{}%
+}
+
+\let\adadinumeral\@adadi
+
+\def\persian@numberoutofrange#1#2{%
+  \PackageError{persian}%
+  {The number `#1' is too large to be formatted using persian}%
+  {The largest possible number is 999,999,999.}%
+}
+
+\def\persian@numberstring#1#2#3#4{%
+  \ifnum\number#1<\@ne
+    #3%
+  \else
+    \ifnum\number#1<1000000000 %
+      \expandafter\persian@adadi\expandafter{\number#1}#2%
+    \else
+      \persian@numberoutofrange{#1}{#4}%
+    \fi
+  \fi
+}
+
+\def\persian@adadi#1#2{%
+  \expandafter\persian@@adadi
+  \ifcase
+    \ifnum#1<10 1%
+    \else
+      \ifnum#1<100 2%
+      \else
+        \ifnum#1<\@m 3%
+        \else
+          \ifnum#1<\@M 4%
+          \else
+            \ifnum#1<100000 5%
+            \else
+              \ifnum#1<1000000 6%
+              \else
+                \ifnum#1<10000000 7%
+                \else
+                  \ifnum#1<100000000 8%
+                  \else
+                    9%
+                  \fi
+                \fi
+              \fi
+            \fi
+          \fi
+        \fi
+      \fi
+    \fi
+  \or 00000000#1%
+  \or 0000000#1%
+  \or 000000#1%
+  \or 00000#1%
+  \or 0000#1%
+  \or 000#1%
+  \or 00#1%
+  \or 0#1%
+  \or #1%
+  \or
+    \@nil#2%
+  \fi
+}
+
+\def\persian@@adadi#1#2#3#4#5#6#7\or#8\@nil#9{%
+  \ifnum#1#2#3>\z@
+    \persian@milyoongan#1#2#3%
+    \ifnum#7>\z@
+      \ifnum#4#5#6>\z@
+        \ و %
+      \else
+        \ و %
+      \fi
+    \else
+      \ifnum#4#5#6>\z@
+        \ و %
+      \fi
+    \fi
+  \fi
+  \ifnum#4#5#6>\z@
+    \persian@sadgan#4#5#6{#1#2#3}{#4#5}\persian@yekani
+    \ifnum#4#5#6>\@ne
+      ‌%
+    \fi
+    هزار%
+    \ifnum#7>\z@
+      \ و %
+    \fi
+  \fi
+  \persian@sadgan#7{#4#5#6}1#9%
+}
+
+\def\persian@milyoongan#1#2#3{%
+  \ifnum#1#2#3=\@ne
+    \persian@sadgan#1#2#301\persian@yekaniii
+    ‌%
+    میلیون%
+  \else
+    \persian@sadgan#1#2#301\persian@yekanii
+    ‌%
+    میلیون%
+  \fi
+}
+
+\def\persian@sadgan#1#2#3#4#5#6{%
+  \ifnum#1>\z@
+    \ifnum#4#1>\@ne
+      \persian@yekaniv#1%
+    \fi
+    صد%
+    \ifnum#2#3>\z@
+      \ و %
+    \fi
+  \fi
+  \ifnum#2#3<20
+    \ifnum#5#2#3>\@ne
+      #6{#2#3}%
+    \fi
+  \else
+    \persian@dahgan#2%
+    \ifnum#3>\z@
+      \ و \persian@yekani#3%
+    \fi
+    #60%
+  \fi
+}
+
+\def\persian@yekani#1{%
+  \ifcase#1%
+    \@empty
+  \or یک%
+  \or دو%
+  \or سه%
+  \or چهار%
+  \or پنج%
+  \or شش%
+  \or هفت%
+  \or هشت%
+  \or نه%
+  \or ده%
+  \or یازده%
+  \or دوازده%
+  \or سیزده%
+  \or چهارده%
+  \or پانزده%
+  \or شانزده%
+  \or هفده%
+  \or هجده%
+  \or نوزده%
+  \fi
+}
+
+\def\persian@yekanii#1{%
+  \ifcase#1%
+    \@empty
+  \or یک%
+  \else
+    \persian@yekani{#1}%
+  \fi
+}
+
+\def\persian@yekaniii#1{%
+  \ifcase#1%
+    \@empty
+  \or یک%
+  \else
+    \persian@yekani{#1}%
+  \fi
+}
+
+\def\persian@yekaniv#1{%
+  \ifcase#1%
+    \@empty
+  \or
+  \or دوی%
+  \or سی%
+  \or چهار%
+  \or پان%
+  \or شش%
+  \or هفت%
+  \or هشت%
+  \or نه%
+  \fi
+}
+
+\def\persian@dahgan#1{%
+  \ifcase#1%
+  \or
+  \or بیست%
+  \or سی%
+  \or چهل%
+  \or پنجاه%
+  \or شصت%
+  \or هفتاد%
+  \or هشتاد%
+  \or نود%
+  \fi
+}
+
+% -------------------------------------------------
+% Tartibi, full Persian ordinal words
+% -------------------------------------------------
+
+\newcommand{\tartibi}[1]{%
+  \expandafter\@tartibi\csname c@#1\endcsname
+}
+
+\newcommand{\@tartibi}[1]{%
+  \persian@numberstring@tartibi{#1}\persian@tartibi{صفرم}{م}%
+}
+
+\let\tartibinumeral\@tartibi
+
+\def\persian@numberstring@tartibi#1#2#3#4{%
+  \ifnum\number#1<\@ne
+    #3%
+  \else
+    \ifnum\number#1<1000000000 %
+      \expandafter\persian@adadi@tartibi\expandafter{\number#1}#2%
+    \else
+      \persian@numberoutofrange{#1}{#4}%
+    \fi
+  \fi
+}
+
+\def\persian@adadi@tartibi#1#2{%
+  \expandafter\persian@@adadi@tartibi
+  \ifcase
+    \ifnum#1<10 1%
+    \else
+      \ifnum#1<100 2%
+      \else
+        \ifnum#1<\@m 3%
+        \else
+          \ifnum#1<\@M 4%
+          \else
+            \ifnum#1<100000 5%
+            \else
+              \ifnum#1<1000000 6%
+              \else
+                \ifnum#1<10000000 7%
+                \else
+                  \ifnum#1<100000000 8%
+                  \else
+                    9%
+                  \fi
+                \fi
+              \fi
+            \fi
+          \fi
+        \fi
+      \fi
+    \fi
+  \or 00000000#1%
+  \or 0000000#1%
+  \or 000000#1%
+  \or 00000#1%
+  \or 0000#1%
+  \or 000#1%
+  \or 00#1%
+  \or 0#1%
+  \or #1%
+  \or
+    \@nil#2%
+  \fi
+}
+
+\def\persian@@adadi@tartibi#1#2#3#4#5#6#7\or#8\@nil#9{%
+  \ifnum#1#2#3>\z@
+    \persian@milyoongan@tartibi#1#2#3%
+    \ifnum#7>\z@
+      \ifnum#4#5#6>\z@
+        \ و %
+      \else
+        \ و %
+      \fi
+    \else
+      \ifnum#4#5#6>\z@
+        \ و %
+      \fi
+    \fi
+  \fi
+  \ifnum#4#5#6>\z@
+    \persian@sadgan#4#5#6{#1#2#3}{#4#5}\persian@yekani
+    \ifnum#4#5#6>\@ne
+      ‌%
+    \fi
+    هزار%
+    \ifnum#7>\z@
+      \ و %
+    \fi
+  \fi
+  \persian@sadgan@tartibi#7{#4#5#6}1#9%
+}
+
+\def\persian@milyoongan@tartibi#1#2#3{%
+  \ifnum#1#2#3=\@ne
+    \persian@sadgan@tartibi#1#2#301\persian@yekaniii
+    ‌%
+    میلیون%
+  \else
+    \persian@sadgan#1#2#301\persian@yekanii
+    ‌%
+    میلیون%
+  \fi
+}
+
+\def\persian@sadgan@tartibi#1#2#3#4#5#6{%
+  \ifnum#1>\z@
+    \ifnum#4#1>\@ne
+      \persian@yekaniv#1%
+    \fi
+    صد%
+    \ifnum#2#3>\z@
+      \ و %
+    \fi
+  \fi
+  \ifnum#2#3<20
+    \ifnum#5#2#3>\@ne
+      \ifnum#1#2#3#4#5=10001 %
+        اول%
+      \else
+        #6{#2#3}%
+      \fi
+    \fi
+  \else
+    \ifnum#2#3=30
+      \persian@dahgan@tartibi#2%
+    \else
+      \persian@dahgan#2%
+    \fi
+    \ifnum#3>\z@
+      \ و \persian@yekanv#3%
+    \fi
+    #60%
+  \fi
+}
+
+\def\persian@dahgan@tartibi#1{%
+  \ifcase#1%
+  \or
+  \or بیست%
+  \or سی‌ا%
+  \or چهل%
+  \or پنجاه%
+  \or شصت%
+  \or هفتاد%
+  \or هشتاد%
+  \or نود%
+  \fi
+}
+
+\def\persian@tartibi#1{%
+  \ifcase#1%
+    م%
+  \or یکم%
+  \or دوم%
+  \or سوم%
+  \or چهارم%
+  \or پنجم%
+  \or ششم%
+  \or هفتم%
+  \or هشتم%
+  \or نهم%
+  \or دهم%
+  \or یازدهم%
+  \or دوازدهم%
+  \or سیزدهم%
+  \or چهاردهم%
+  \or پانزدهم%
+  \or شانزدهم%
+  \or هفدهم%
+  \or هجدهم%
+  \or نوزدهم%
+  \fi
+}
+
+\def\persian@yekanv#1{%
+  \ifcase#1%
+    \@empty
+  \or یک%
+  \or دو%
+  \or سو%
+  \or چهار%
+  \or پنج%
+  \or شش%
+  \or هفت%
+  \or هشت%
+  \or نه%
+  \or ده%
+  \or یازده%
+  \or دوازده%
+  \or سیزده%
+  \or چهارده%
+  \or پانزده%
+  \or شانزده%
+  \or هفده%
+  \or هجده%
+  \or نوزده%
+  \fi
+}
+
+% -------------------------------------------------
+% enumitem integration
+%
+% This makes labels such as \tartibi* valid in
+% enumitem optional arguments.
+% -------------------------------------------------
+
+\newif\ifpersian@enumitem@counters@registered
+
+\def\persian@register@enumitem@counters{%
+  \ifpersian@enumitem@counters@registered
+  \else
+    \@ifundefined{AddEnumerateCounter}{}{%
+      \AddEnumerateCounter{\tartibi}{\@tartibi}{نودونهم}%
+      \persian@enumitem@counters@registeredtrue
+    }%
+  \fi
+}
+
+\AtBeginDocument{%
+  \persian@register@enumitem@counters
+}
+
+
+
+% -------------------------------------------------
+% Classical abjad, 1..1999
+% -------------------------------------------------
+
+\providecommand*{\persian@warning}[1]{%
+  \PackageWarning{persian}{#1}%
+}
+
+\def\@abjad#1{%
+  \ifnum#1>1999 %
+    \persian@warning{Illegal value (#1) for abjad numeral}%
+    #1%
+  \else
+    \ifnum#1<\z@
+      \space
+      \persian@warning{Illegal value (#1) for abjad numeral}%
+    \else
+      \ifnum#1<10 %
+        \expandafter\abj@num@i\number#1%
+      \else
+        \ifnum#1<100 %
+          \expandafter\abj@num@ii\number#1%
+        \else
+          \ifnum#1<\@m %
+            \expandafter\abj@num@iii\number#1%
+          \else
+            \ifnum#1<\@M %
+              \expandafter\abj@num@iv\number#1%
+            \fi
+          \fi
+        \fi
+      \fi
+    \fi
+  \fi
+}
+
+\def\abjad#1{%
+  \expandafter\@abjad\csname c@#1\endcsname
+}
+
+\let\abjadnumeral\@abjad
+
+\def\abjad@zero{}
+
+\def\abj@num@i#1{%
+  \ifcase#1%
+  \or آ%
+  \or ب%
+  \or ج%
+  \or د%
+  \or ه%
+  \or و%
+  \or ز%
+  \or ح%
+  \or ط%
+  \fi
+  \ifnum#1=\z@
+    \abjad@zero
+  \fi
+}
+
+\def\abj@num@ii#1{%
+  \ifcase#1%
+  \or ی%
+  \or ک%
+  \or ل%
+  \or م%
+  \or ن%
+  \or س%
+  \or ع%
+  \or ف%
+  \or ص%
+  \fi
+  \ifnum#1=\z@
+  \fi
+  \abj@num@i
+}
+
+\def\abj@num@iii#1{%
+  \ifcase#1%
+  \or ق%
+  \or ر%
+  \or ش%
+  \or ت%
+  \or ث%
+  \or خ%
+  \or ذ%
+  \or ض%
+  \or ظ%
+  \fi
+  \ifnum#1=\z@
+  \fi
+  \abj@num@ii
+}
+
+\def\abj@num@iv#1{%
+  \ifcase#1%
+  \or غ%
+  \fi
+  \ifnum#1=\z@
+  \fi
+  \abj@num@iii
+}
+
+% -------------------------------------------------
+% Latin alphabet switching, as in xepersian
+% -------------------------------------------------
+
+\let\@latinalph\@alph
+\let\@latinAlph\@Alph
+
+\def\LatinAlphs{%
+  \let\@alph\@latinalph
+  \let\@Alph\@latinAlph
+}
+
+\def\PersianAlphs{%
+  \let\@alph\@abjad
+  \let\@Alph\@Abjad
+}
+
+\def\thempfootnote{%
+  {\itshape\@latinalph\c@mpfootnote}%
+}
+
+% -------------------------------------------------
+% Language alphabet switching, as in xepersian
+% -------------------------------------------------
+
+\newif\ifpersian@alph@hooks@registered
+
+\def\persian@register@alph@hooks{%
+  \ifpersian@alph@hooks@registered
+  \else
+    \@ifundefined{extraspersian}{}{%
+      \addto\extraspersian{%
+        \PersianAlphs
+      }%
+    }%
+    \@ifundefined{extrasfarsi}{}{%
+      \addto\extrasfarsi{%
+        \PersianAlphs
+      }%
+    }%
+    \@ifundefined{extrasenglish}{}{%
+      \addto\extrasenglish{%
+        \LatinAlphs
+      }%
+    }%
+    \persian@alph@hooks@registeredtrue
+  \fi
+}
+
+\AtBeginDocument{%
+  \persian@register@alph@hooks
+  \PersianAlphs
+}
+
+
+
+
+
+
+\makeatother
+
+\endinput

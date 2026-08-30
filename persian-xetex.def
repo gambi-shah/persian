@@ -1,0 +1,103 @@
+% persian-xetex.def
+%
+% Persian: Persian language support for LaTeX.
+%
+% Copyright (C) 2026 Amer Amikhteh
+%
+% This file is part of the Persian package.
+%
+% This work is free software: you may redistribute it and/or modify
+% it under the terms of the LaTeX Project Public License as published
+% by the LaTeX Project, either version 1.3c of the License, or
+% (at your option) any later version.
+%
+% This work is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+%
+% The full license text is available at:
+% https://www.latex-project.org/lppl/
+%
+% This work is "maintained" by Amer Amikhteh.
+%
+% The current maintainer of this work is Amer Amikhteh.
+
+
+
+\ProvidesFile{persian-xetex.def}
+[2026/08/27 v0.1 XeTeX support for persian]
+
+
+\makeatletter
+
+
+% --------------------------------------------------------------------------
+% Footnote rule
+% --------------------------------------------------------------------------
+
+\def\persian@footnoterule@rtl{%
+    \kern-3\p@
+    \hbox to \columnwidth{\hfill\rule{.4\columnwidth}{0.4\p@}}%
+    \kern 2.6\p@
+}
+\let\footnoterule\persian@footnoterule@rtl
+
+% --------------------------------------------------------------------------
+% Math positioning compatibility such as array package
+% --------------------------------------------------------------------------
+
+\providecommand{\UseMathForPositioningText}{}
+
+% ------------------------------------------
+% Fix RTL natbib links for recent hyperref versions.
+% ------------------------------------------
+
+\IfHookExistsTF{cmd/hyper@natlinkstart/before}{
+
+    \def\persian@hyper@natlinkstart#1{}
+    \def\persian@hyper@natlinkend{}
+    \def\persian@hyper@natlinkbreak#1#2{#1}
+
+    \AddToHookWithArguments{cmd/persian@hyper@natlinkstart/before}
+    {%
+        \Hy@backout{#1}%
+        \hyper@linkstart{cite}{cite.#1}%
+        \def\hyper@nat@current{#1}%
+    }
+    \AddToHook{cmd/persian@hyper@natlinkend/after}
+    {\hyper@linkend}
+    \def\persian@hyper@natlinkbreak#1#2{%
+        \hyper@linkend#1\hyper@linkstart{cite}{cite.#2}%
+    }
+
+    \def\NAT@hyper@#1{%
+        \persian@hyper@natlinkstart{\@citeb\@extra@b@citeb}#1\persian@hyper@natlinkend
+    }%
+
+    \def\persian@patch@natlinkbreak{%
+        \patchcmd{\NAT@citex}
+        {\hyper@natlinkbreak}
+        {\persian@hyper@natlinkbreak}
+        {\persian@patch@natlinkbreak}
+        {}%
+    }
+    \persian@patch@natlinkbreak
+}{}
+
+
+% ------------------------------------------------
+% Disable fontspec math mode handling
+% ------------------------------------------------
+\ifnum\bbl@bidimode>\@ne
+    \ExplSyntaxOn
+    \bool_set_false:N \g__fontspec_math_bool
+    \ExplSyntaxOff
+\fi
+
+
+
+\makeatother
+
+
+
+\endinput

@@ -1,0 +1,73 @@
+% persian-pdftex.def
+%
+% Persian: Persian language support for LaTeX.
+%
+% Copyright (C) 2026 Amer Amikhteh
+%
+% This file is part of the Persian package.
+%
+% This work is free software: you may redistribute it and/or modify
+% it under the terms of the LaTeX Project Public License as published
+% by the LaTeX Project, either version 1.3c of the License, or
+% (at your option) any later version.
+%
+% This work is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+%
+% The full license text is available at:
+% https://www.latex-project.org/lppl/
+%
+% This work is "maintained" by Amer Amikhteh.
+%
+% The current maintainer of this work is Amer Amikhteh.
+
+
+
+\ProvidesFile{persian-pdftex.def}
+[2026/08/27 v0.1 pdfTeX support for persian]
+
+\makeatletter
+
+
+\providecommand{\persianmainlanguage}{farsi}
+
+% ------------------------------------------------
+% counters of arabicore package for beamer
+% ------------------------------------------------
+\ifpersian@beamer
+    \providecommand{\labelitemiv}
+    {\if@rl\protect $-$ %
+        \else\protect\textperiodcentred\fi}
+    \providecommand{\labelitemi}
+    {\if@rl\protect\textLR{$\bullet$} %
+        \else\protect\textbullet\fi}
+
+    \providecommand{\labelitemii}
+    {\if@rl\protect\textLR{$\circ$} %
+        \else\protect\textLR{ \normalfont\bfseries\textendash}\fi}
+
+    \providecommand{\labelitemiii}
+    {\if@rl\protect\textLR{$*$} %
+        \else\protect\textasteriskcentered\fi}
+
+    \providecommand{\labelenumi}
+    {\if@rl(\I{\number\c@enumi}).%
+        \else{\number\c@enumi}.\fi}
+
+    \providecommand{\labelenumii}
+    {\if@rl\abjadnumeral{\number\c@enumii}. %
+        \else({\number\c@enumii})\fi}
+
+    \providecommand{\labelenumiii}
+    {\if@rl\I{\number\c@enumiii}$\space-\space$ %
+        \else({\number\c@enumiii})\fi}
+
+    \providecommand{\labelenumiv}
+    {\if@rl\abjadnumeral{\number\c@enumiv}$\space-\space$ %
+        \else({\number\c@enumiv})\fi}
+\fi
+
+
+\makeatother
+\endinput

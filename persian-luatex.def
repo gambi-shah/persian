@@ -1,0 +1,311 @@
+% persian-luatex.def
+%
+% Persian: Persian language support for LaTeX.
+%
+% Copyright (C) 2026 Amer Amikhteh
+%
+% This file is part of the Persian package.
+%
+% This work is free software: you may redistribute it and/or modify
+% it under the terms of the LaTeX Project Public License as published
+% by the LaTeX Project, either version 1.3c of the License, or
+% (at your option) any later version.
+%
+% This work is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+%
+% The full license text is available at:
+% https://www.latex-project.org/lppl/
+%
+% This work is "maintained" by Amer Amikhteh.
+%
+% The current maintainer of this work is Amer Amikhteh.
+
+
+
+\ProvidesFile{persian-luatex.def}
+[2026/08/27 v0.1 LuaTeX support for persian]
+
+\makeatletter
+
+
+% ------------------------------------------
+% basic bidi commands
+% ------------------------------------------
+\def\setparLTR{%
+    \@RTLfalse
+    \pardir TLT\relax
+    \textdir TLT\relax
+}%
+
+\def\setparRTL{%
+    \@RTLtrue
+    \pardir TRT\relax
+    \textdir TRT\relax
+}%
+
+\@ifundefined{beginR}{%
+    \protected\def\beginR{%
+        \@RTLtrue
+        \begingroup
+        % \textdir TRT\relax
+        \linedirection\@ne
+    }%
+}{}%
+
+\@ifundefined{endR}{%
+    \protected\def\endR{%
+        \endgroup
+    }%
+}{}%
+
+\@ifundefined{beginL}{%
+    \protected\def\beginL{%
+        \@RTLfalse
+        \begingroup
+        \textdir TLT\relax
+    }%
+}{}%
+
+\@ifundefined{endL}{%
+    \protected\def\endL{%
+        \endgroup
+    }%
+}{}%
+
+
+
+% ------------------------------------------
+% Footnote Hook
+% ------------------------------------------
+
+\def\footnoterule{%
+    \kern-3\p@
+    \hbox dir TLT to \columnwidth{%
+        \hss
+        \vrule width .4\columnwidth height 0.4\p@ depth 0pt%
+    }%
+    \kern 2.6\p@
+}%
+
+\let\persian@fn@dir\relax
+\newtoks\persian@fn@pending@toks
+\newif\ifpersian@fn@pending
+
+\def\persian@fn@setdir{%
+    \if@RTL
+        \global\let\persian@fn@dir\relax
+    \else
+        \global\let\persian@fn@dir\setparLTR
+    \fi
+}%
+
+\@ifundefined{bbl@footnote}{}{%
+    \let\persian@orig@bbl@footnote\bbl@footnote
+    \def\bbl@footnote#1#2#3{%
+        \persian@fn@setdir
+        \persian@orig@bbl@footnote{#1}{#2}{#3}}%
+}%
+
+\let\persian@fn@makefntext\@makefntext
+\def\@makefntext#1{%
+    \persian@fn@dir
+    \persian@fn@makefntext{#1}%
+}%
+
+\let\persian@orig@footnotetext\@footnotetext
+
+
+\def\persian@fn@deferred@footnotetext#1{%
+    \global\let\persian@fn@dir\setparRTL
+    \persian@orig@footnotetext{#1}%
+}%
+
+\def\persian@fn@flush{%
+    \ifpersian@fn@pending
+        \global\persian@fn@pendingfalse
+        \the\persian@fn@pending@toks
+        \global\persian@fn@pending@toks{}%
+    \fi
+}%
+
+\def\@footnotetext#1{%
+    \ifmmode
+        \global\persian@fn@pendingtrue
+        \global\persian@fn@pending@toks\expandafter{%
+            \the\persian@fn@pending@toks
+            \persian@fn@deferred@footnotetext{#1}%
+        }%
+        \aftergroup\persian@fn@flush
+    \else
+        \persian@orig@footnotetext{#1}%
+    \fi
+}%
+
+\let\persian@orig@fn@fntext\fn@fntext
+
+\def\fn@fntext#1{%
+    \ifmmode
+        \global\let\persian@fn@dir\setparRTL
+    \fi
+    \persian@orig@fn@fntext{#1}%
+}
+
+% ------------------------------------------
+% makebox r and l
+% ------------------------------------------
+
+\def\bm@l{%
+    \if@RTL
+        \hss\unhbox\@tempboxa
+    \else
+        \unhbox\@tempboxa\hss
+    \fi
+}
+\let\bm@t\bm@l
+
+\def\bm@r{%
+    \if@RTL
+        \unhbox\@tempboxa\hss
+    \else
+        \hss\unhbox\@tempboxa
+    \fi
+}
+\let\bm@b\bm@r
+
+% ------------------------------------------
+% tabular alignment
+% ------------------------------------------
+
+\def\persian@swap@lr@chnum@do{%
+    \ifcase\@chnum\relax
+    \or
+        \@chnum=\tw@
+    \or
+        \@chnum=\@ne
+    \fi
+}
+
+\def\persian@swap@lr@chnum{%
+    \if@RTL
+        \persian@swap@lr@chnum@do
+    \fi
+}
+
+\def\persian@patch@kernel@tabular{%
+    \@ifundefined{persian@kernel@tabular@patched}{%
+        \@ifundefined{@tabclassz}{}{%
+            \let\persian@orig@tabclassz\@tabclassz
+            \def\persian@kernel@tabular@patched{}%
+            \def\@tabclassz{%
+                \persian@swap@lr@chnum
+                \persian@orig@tabclassz
+            }%
+        }%
+    }{}%
+}
+
+\def\persian@patch@array@tabular{%
+    \@ifundefined{persian@array@tabular@patched}{%
+        \@ifundefined{@classz}{}{%
+            \let\persian@orig@classz\@classz
+            \def\persian@array@tabular@patched{}%
+            \def\@classz{%
+                \persian@swap@lr@chnum
+                \persian@orig@classz
+            }%
+        }%
+    }{}%
+}
+
+\@ifundefined{AddToHook}{%
+    \AtBeginDocument{%
+        \@ifpackageloaded{array}{%
+            \persian@patch@array@tabular
+        }{%
+            \persian@patch@kernel@tabular
+        }%
+    }%
+}{%
+    \AddToHook{package/array/after}{%
+        \persian@patch@array@tabular
+    }%
+    \AtBeginDocument{%
+        \@ifpackageloaded{array}{%
+            \persian@patch@array@tabular
+        }{%
+            \persian@patch@kernel@tabular
+        }%
+    }%
+}
+
+% ------------------------------------------
+%   Tikz
+% ------------------------------------------
+\ifpersian@beamerrl
+\else
+    \AtBeginEnvironment{tikzpicture}{%
+        \pardir TLT%
+        % \textdir TLT%
+    }
+
+    \AtEndEnvironment{tikzpicture}{%
+        \pardir TRT%
+        % \textdir TRT%
+    }
+\fi
+% ------------------------------------------
+%   fancyhdr
+% ------------------------------------------
+
+\def\persian@patch@fancyhdr{%
+    \setlength{\headheight}{14.5pt}%
+}
+
+\@ifundefined{AddToHook}{%
+    \AtBeginDocument{%
+        \@ifpackageloaded{fancyhdr}{%
+            \persian@patch@fancyhdr
+        }{}%
+    }%
+}{%
+    \AddToHook{package/fancyhdr/after}{%
+        \persian@patch@fancyhdr
+        \@ifundefined{beginL}{}{%
+            \AddToHook{fancyhdr/head/begin}{\beginL}%
+            \AddToHook{fancyhdr/head/end}{\endL}%
+            \AddToHook{fancyhdr/foot/begin}{\beginL}%
+            \AddToHook{fancyhdr/foot/end}{\endL}%
+        }%
+    }%
+    \AtBeginDocument{%
+        \@ifpackageloaded{fancyhdr}{%
+            \persian@patch@fancyhdr
+        }{}%
+    }%
+}
+
+% ------------------------------------------
+% bidi items / bibliography items
+% ------------------------------------------
+
+\newenvironment{LTRitems}
+{\par\setparLTR\ignorespaces}
+{\par}
+
+\newenvironment{RTLitems}
+{\par\setparRTL\ignorespaces}
+{\par}
+
+\newenvironment{LTRbibitems}
+{\par\setparLTR\ignorespaces}
+{\par}
+
+\newenvironment{RTLbibitems}
+{\par\setparRTL\ignorespaces}
+{\par}
+
+\makeatother
+
+\endinput

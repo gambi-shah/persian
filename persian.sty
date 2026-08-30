@@ -1,0 +1,413 @@
+% Persian: Persian language support for LaTeX.
+%
+% Copyright (C) 2026 Amer Amikhteh
+%
+% This package is free software: you may redistribute it and/or modify
+% it under the terms of the LaTeX Project Public License as published
+% by the LaTeX Project, either version 1.3c of the License, or
+% (at your option) any later version.
+%
+% This package is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+%
+% The full license text is available at:
+% https://www.latex-project.org/lppl/
+%
+% This work is "maintained" by Amer Amikhteh.
+%
+% The current maintainer of this work is Amer Amikhteh.
+%
+% This package consists of the file persian.sty and the files
+% distributed with it.
+
+
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{persian}
+[2026/08/27 v0.1.0 Persian support for pdfTeX, XeTeX, and LuaTeX]
+
+\RequirePackage{iftex}
+\RequirePackage{xparse}
+\RequirePackage{xkeyval}
+
+\makeatletter
+
+
+% ------------------------------------------
+% Package options
+% ------------------------------------------
+
+\define@key{persian}{bidi}{%
+    \gdef\persian@bidi{#1}%
+}
+
+\define@key{persian}{layout}{%
+    \edef\persian@layout{%
+        \persian@layout\space#1%
+    }%
+}
+
+\def\persian@layout{}
+
+\ifPDFTeX
+    \setkeys{persian}{bidi=default}
+\fi
+
+\ifXeTeX
+    \setkeys{persian}{bidi=bidi-r}
+\fi
+
+\ifLuaTeX
+    \setkeys{persian}{%
+        bidi=basic,
+        layout=counters tabular graphics footnotes
+    }
+\fi
+
+\DeclareOptionX{bidi}{%
+    \setkeys{persian}{bidi=#1}%
+}
+
+\DeclareOptionX{layout}{%
+    \setkeys{persian}{layout=#1}%
+}
+
+\DeclareOptionX*{%
+    \edef\persian@babeloptions{%
+        \persian@babeloptions,\CurrentOption
+    }%
+}
+
+\def\persian@babeloptions{}
+
+\ProcessOptionsX\relax
+
+% ------------------------------------------
+% beamer conditionals
+% ------------------------------------------
+
+\newif\ifpersian@beamer
+\newif\ifpersian@beamerrl
+\@ifclassloaded{beamer}{\persian@beamertrue}{}
+\@ifclassloaded{beamer-rl}{\persian@beamerrltrue}{}
+
+
+% ------------------------------------------
+% Resolve Bug of arabiccore Package
+% ------------------------------------------
+
+\@ifundefined{if@rl}{%
+    \newif\if@rl
+}{}
+
+\ifPDFTeX
+    \ifpersian@beamer
+        \providecommand{\labelitemiv}
+        {\if@rl\protect $-$ %
+            \else\protect\textperiodcentred\fi}
+        \providecommand{\labelitemi}
+        {\if@rl\protect\textLR{$\bullet$}
+            \else\protect\textbullet\fi}
+
+        \providecommand{\labelitemii}
+        {\if@rl\protect\textLR{$\circ$} %
+            \else\protect\textLR{ \normalfont\bfseries\textendash}\fi}
+
+        \providecommand{\labelitemiii}
+        {\if@rl\protect\textLR{$*$} %
+            \else\protect\textasteriskcentered\fi}
+
+        \providecommand{\labelenumi}
+        {\if@rl(\I{\number\c@enumi}).%
+            \else{\number\c@enumi}.\fi}
+
+        \providecommand{\labelenumii}
+        {\if@rl\abjadnumeral{\number\c@enumii}. %
+            \else({\number\c@enumii})\fi}
+
+        \providecommand{\labelenumiii}
+        {\if@rl\I{\number\c@enumiii}$\space-\space$ %
+            \else({\number\c@enumiii})\fi}
+
+        \providecommand{\labelenumiv}
+        {\if@rl\abjadnumeral{\number\c@enumiv}$\space-\space$ %
+            \else({\number\c@enumiv})\fi}
+    \fi \fi
+
+% ------------------------------------------
+% Engine setup
+% ------------------------------------------
+
+\ifPDFTeX
+    \RequirePackage[utf8]{inputenc}
+    \RequirePackage[LAE,LFE,T1]{fontenc}
+    \RequirePackage[bidi=\persian@bidi,\persian@babeloptions,english,farsi]{babel}
+\fi
+
+\ifXeTeX
+    \RequirePackage[
+        bidi=\persian@bidi,
+        \persian@babeloptions
+    ]{babel}
+
+    \babelprovide[import,main]{persian}
+    \babelprovide[import]{english}
+\fi
+
+\ifLuaTeX
+
+    \RequirePackage{fontspec}
+
+    \ifpersian@beamerrl
+
+    \else
+        \RequirePackage[
+            bidi=\persian@bidi,
+            layout=\persian@layout,
+            \persian@babeloptions
+        ]{babel}
+
+    \fi
+
+    \babelprovide[import,main,mapdigits]{persian}
+    \babelprovide[import]{english}
+
+\fi
+
+
+% ------------------------------------------
+% Load modular definitions
+% ------------------------------------------
+\input{persian-numerals.def}
+\input{persian-book.def}
+\makeatletter
+\ifPDFTeX \g@addto@macro\captionsfarsi{\input{persian-captions.def}} \fi
+\ifTUTeX \g@addto@macro\captionspersian{\input{persian-captions.def}} \fi
+\makeatother
+\ifTUTeX \input{persian-fonts.def} \fi
+\ifPDFTeX \input{persian-pdftex.def} \fi
+\ifXeTeX
+    \input{persian-xetex.def}
+\fi
+\ifLuaTeX \input{persian-luatex.def} \fi
+
+
+
+
+
+% ------------------------------------------
+% Beamer beamerbasebox from beamer-rl class
+% ------------------------------------------
+
+\makeatletter
+\ifpersian@beamer
+    \ifpersian@beamerrl
+    \else
+        \ifLuaTeX \input{persian-beamer-luatex.def} \fi
+    \fi
+\fi
+\makeatother
+
+
+
+\makeatletter
+
+% ------------------------------------------------
+% Label-safe sanitization of Babel bidi wrappers
+% ------------------------------------------------
+
+\long\def\persian@firstofone#1{#1}
+
+\def\persian@strip@babel@bidi{%
+    \@ifundefined{babelsublr}{}{%
+        \let\babelsublr\persian@firstofone
+    }%
+    \@ifundefined{babelsubrl}{}{%
+        \let\babelsubrl\persian@firstofone
+    }%
+}
+
+\newif\ifpersian@label@patched
+
+\def\persian@patch@label{%
+    \ifpersian@label@patched
+    \else
+        \global\persian@label@patchedtrue
+        \let\persian@orig@label\label
+        \protected\def\label##1{%
+            \begingroup
+            \persian@strip@babel@bidi
+            \edef\persian@tmp{##1}%
+            \expandafter\endgroup
+            \expandafter\persian@orig@label\expandafter{\persian@tmp}%
+        }%
+    \fi
+}
+
+\AddToHook{begindocument/end}{%
+    \persian@patch@label
+}
+
+
+
+% ------------------------------------------
+% Hyperref fallbacks
+% ------------------------------------------
+
+\AtBeginDocument{%
+    \@ifpackageloaded{hyperref}{%
+        \pdfstringdefDisableCommands{%
+            \def\harfi#1{}%
+            \def\adadi#1{}%
+            \def\tartibi#1{}%
+            \def\abjad#1{}%
+            \def\Abjad#1{}%
+            \def\@harfi#1{}%
+            \def\@adadi#1{}%
+            \def\@tartibi#1{}%
+            \def\@abjad#1{}%
+            \def\@Abjad#1{}%
+            \def\lr#1{#1}%
+            \def\rl#1{#1}%
+            \def\LR#1{#1}%
+            \def\RL#1{#1}%
+        }%
+    }{}%
+}
+
+
+% ------------------------------------------
+% Bidi commands
+% ------------------------------------------
+
+\providecommand{\if@RTL}{\ifnum\bbl@thetextdir>\z@}
+\providecommand{\@RTLtrue}{\chardef\bbl@thetextdir\@ne}
+\providecommand{\@RTLfalse}{\chardef\bbl@thetextdir\z@}
+
+
+\providecommand{\RLE}[1]{%
+    \leavevmode
+    {%
+        \bbl@textdir{1}%
+        #1%
+    }%
+}%
+
+\providecommand{\LRE}[1]{%
+    \leavevmode
+    {%
+        \bbl@textdir{0}%
+        #1%
+    }%
+}%
+
+\ProvideDocumentEnvironment{RTL}{}
+{%
+    \par
+    \begingroup
+    \bbl@pardir{1}%
+    \bbl@textdir{1}%
+}
+{%
+    \par
+    \endgroup
+}%
+
+\ProvideDocumentEnvironment{LTR}{}
+{%
+    \par
+    \begingroup
+    \bbl@pardir{0}%
+    \bbl@textdir{0}%
+}
+{%
+    \par
+    \endgroup
+}%
+
+\let\LR\LRE
+\let\RL\RLE
+
+% ------------------------------------------
+% Inline language commands
+% ------------------------------------------
+
+\ProvideDocumentCommand{\lr}{m}{%
+    \mbox{
+        \@ifundefined{LatinAlphs}{}{\LatinAlphs}%
+        \ifx\languagename\englishlanguage
+            #1%
+        \else
+            \foreignlanguage[captions]{english}{#1}%
+        \fi
+    }
+}
+
+\ProvideDocumentCommand{\rl}{m}{%
+    \mbox{
+        \@ifundefined{PersianAlphs}{}{\PersianAlphs}%
+        \ifx\languagename\persianmainlanguage
+            #1%
+        \else
+            \foreignlanguage[captions]{\persianmainlanguage}{#1}%
+        \fi
+    }
+}
+
+
+% ------------------------------------------
+% Language environments
+% ------------------------------------------
+
+\ProvideDocumentEnvironment{latin}{}%
+{%
+    \begin{LTR}
+    \begin{otherlanguage*}[captions]{english}%
+    \@ifundefined{LatinAlphs}{}{%
+        \LatinAlphs
+    }%
+}%
+{%
+    \end{otherlanguage*}%
+    \end{LTR}
+}%
+
+\ProvideDocumentEnvironment{persian}{}%
+{%
+    \begin{RTL}
+    \begin{otherlanguage*}[captions]{\persianmainlanguage}%
+    \@ifundefined{PersianAlphs}{}{%
+        \PersianAlphs
+    }%
+}%
+{%
+    \end{otherlanguage*}%
+    \end{RTL}
+}%
+
+% ------------------------------------------
+% Latin font reset
+% ------------------------------------------
+
+\ProvideDocumentCommand{\resetlatinfont}{}{%
+    \selectlanguage{english}%
+}
+
+% ------------------------------------------
+% Date helpers
+% ------------------------------------------
+
+\DeclareRobustCommand{\latintoday}{%
+    \foreignlanguage[date]{english}{\today}%
+}
+
+
+
+
+
+
+\makeatother
+
+
+\endinput
