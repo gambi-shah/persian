@@ -334,25 +334,25 @@
 % ------------------------------------------
 
 \ProvideDocumentCommand{\lr}{m}{%
-    \mbox{
+    \mbox{\unskip
         \@ifundefined{LatinAlphs}{}{\LatinAlphs}%
         \ifx\languagename\englishlanguage
             #1%
         \else
             \foreignlanguage[captions]{english}{#1}%
         \fi
-    }
+    }\unskip
 }
 
 \ProvideDocumentCommand{\rl}{m}{%
-    \mbox{
+    \mbox{\unskip
         \@ifundefined{PersianAlphs}{}{\PersianAlphs}%
         \ifx\languagename\persianmainlanguage
             #1%
         \else
             \foreignlanguage[captions]{\persianmainlanguage}{#1}%
         \fi
-    }
+    }\unskip
 }
 
 
