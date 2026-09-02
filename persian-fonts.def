@@ -24,7 +24,7 @@
 
 
 \ProvidesFile{persian-fonts.def}
-[2026/08/27 v1.0 Common definitions for fonts in XeTeX and LuaTeX]
+[2026/09/02 v0.1.1 Common definitions for fonts in XeTeX and LuaTeX]
 
 
 
@@ -64,8 +64,9 @@
     {\IfFontExistsTF{Vazirmatn}{\settextfont[ItalicFont={Vazirmatn}]{Vazirmatn}}
         {\IfFontExistsTF{Amiri}{\settextfont{Amiri}}
             {\IfFontExistsTF{FreeSerif}{\settextfont{FreeSerif}}
-                {\typeout{Warning: No suitable Persian font found!}
-                }}}}
+                {\IfFontExistsTF{Tahoma}{\settextfont{Tahoma}}
+                    {\typeout{Warning: No suitable Persian font found!}
+                    }}}}}
 \fi
 
 % --------------------------------------
